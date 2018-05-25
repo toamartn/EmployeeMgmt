@@ -1,8 +1,10 @@
 package com.mss.demo.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -18,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import com.mss.demo.bean.Employee;
 import com.mss.demo.bean.EmployeeLocation;
 import com.mss.demo.bean.WorkLocation;
+import com.mss.demo.controller.Sender;
 import com.mss.demo.dao.EmployeeDAODataJPA;
 import com.mss.demo.entities.EmployeeMapping;
 
@@ -32,11 +35,14 @@ public class EmployeeService {
 	// @Autowired
 	private RestTemplate restTemplate;
 
+	Sender sender;
+	
 	@Autowired
-	public EmployeeService(EmployeeDAODataJPA employeeDAO, RestTemplateBuilder restTemplateBuilder) {
+	public EmployeeService(EmployeeDAODataJPA employeeDAO, RestTemplateBuilder restTemplateBuilder, Sender sender) {
 		super();
 		this.employeeDAO = employeeDAO;
 		this.restTemplate = restTemplateBuilder.build();
+		this.sender = sender;
 	}
 
 	public List<Employee> getAllEmployees() {
@@ -78,17 +84,22 @@ public class EmployeeService {
 		BeanUtils.copyProperties(employee, employeeMapping);
 		employeeMapping = employeeDAO.save(employeeMapping);
 		BeanUtils.copyProperties(employeeMapping, employee);
+		
+		/////////////////////////////////////// Sending new location to LocMgmtQ QUEUE ////////////////////////////
+		Map<String, Object> deskDetails = new HashMap<String, Object>();
+		deskDetails.put("LOCATION_NUMBER", employee.getLocationNumber());
+		deskDetails.put("EMPLOYEEID", employee.getEmpId());
+		sender.send(deskDetails);
+
 		return employee;
 	}
 
-	public Employee updateLocation(int locNum, int empId) {
+	public void updateLocation(int locNum, int empId) {
 
-		System.out.println("Request recieved to update " + locNum + " emp " + empId);
+		System.out.println("Request recieved to update Location details in Employee  " + locNum + " emp " + empId);
 		EmployeeMapping employeeMapping = employeeDAO.findOne(empId);
 		employeeMapping.setLocationNumber(locNum);
-		Employee employee = new Employee();
-		BeanUtils.copyProperties(employeeMapping, employee);
-		return employee;
+		employeeDAO.save(employeeMapping);
 	}
 
 	public Employee deleteEmployee(int id) {

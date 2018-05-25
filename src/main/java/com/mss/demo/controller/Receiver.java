@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
 
 import com.mss.demo.service.EmployeeService;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
-
 
 @Component
 public class Receiver {
