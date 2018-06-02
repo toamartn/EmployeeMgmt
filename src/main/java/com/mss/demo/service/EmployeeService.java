@@ -27,6 +27,7 @@ import com.mss.demo.entities.EmployeeMapping;
 @Component
 public class EmployeeService {
 
+	final String GET_LOC_URL = "http://192.168.0.3:8082/locMgmt";
 	private static final Log logger = LogFactory.getLog(EmployeeService.class);
 
 	// @Autowired
@@ -114,19 +115,13 @@ public class EmployeeService {
 	}
 
 	public EmployeeLocation getEmpLoc(int empId) {
-		final String GET_LOC_URL = "http://localhost:8082/locMgmt";
 		EmployeeLocation empLoc = new EmployeeLocation();
 		EmployeeMapping empMapping = employeeDAO.findOne(empId);
 		BeanUtils.copyProperties(empMapping, empLoc, getNullPropertyNames(empMapping));
-
 		WorkLocation location = null;
 		try {
-			System.out.println("Calling location URL:::  " + GET_LOC_URL + "/get/" + empMapping.getLocationNumber()); // get
-																														// location
-																														// details
-																														// by
-																														// location
-																														// number
+			System.out.println("Calling location URL:::  " + GET_LOC_URL + "/get/" + empMapping.getLocationNumber()); 
+			// get location details by location number
 			location = restTemplate.getForObject(GET_LOC_URL + "/get/" + empMapping.getLocationNumber(),
 					WorkLocation.class);
 			logger.info("calling fares to get fare " + location);
